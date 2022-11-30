@@ -1,7 +1,7 @@
 package com.pzg.dynamic.datasource.aspect;
 
 import com.pzg.dynamic.datasource.annotation.DS;
-import com.pzg.dynamic.datasource.config.DynamicDataSourceContextHolder;
+import com.pzg.dynamic.datasource.config.DataSourceContextHolder;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,8 +19,8 @@ import java.lang.reflect.Method;
  */
 @Order(1)
 @Aspect
-public class DynamicDataSourceAspect {
-    private static final Logger log = LoggerFactory.getLogger(DynamicDataSourceAspect.class);
+public class DataSourceAspect {
+    private static final Logger log = LoggerFactory.getLogger(DataSourceAspect.class);
 
 
     @Pointcut("@within(com.pzg.dynamic.datasource.annotation.DS)")
@@ -41,7 +41,7 @@ public class DynamicDataSourceAspect {
         Class<?> declaringClass = method.getDeclaringClass();
         if (declaringClass.isAnnotationPresent(DS.class) && !method.isAnnotationPresent(DS.class)) {
             DS DS = declaringClass.getAnnotation(DS.class);
-            DynamicDataSourceContextHolder.setDataSource(DS.value());
+            DataSourceContextHolder.setDataSource(DS.value());
             log.info("当前类设置数据源：" + DS.value());
         }
 
@@ -55,7 +55,7 @@ public class DynamicDataSourceAspect {
 
         if (method.isAnnotationPresent(DS.class)) {
             DS DS = method.getAnnotation(DS.class);
-            DynamicDataSourceContextHolder.setDataSource(DS.value());
+            DataSourceContextHolder.setDataSource(DS.value());
             log.info("当前方法设置数据源：" + DS.value());
         }
 
@@ -66,7 +66,7 @@ public class DynamicDataSourceAspect {
         try {
             return point.proceed();
         } finally {
-            DynamicDataSourceContextHolder.clearDataSource();
+            DataSourceContextHolder.clearDataSource();
             log.debug("清理数据源!");
         }
     }

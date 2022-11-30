@@ -22,9 +22,9 @@ import java.util.Properties;
  * @author pzg
  * @description 动态数据源注册器
  */
-public class DynamicDataSourceRegister implements EnvironmentAware {
+public class DataSourceRegister implements EnvironmentAware {
 
-    private static final Logger log = LoggerFactory.getLogger(DynamicDataSourceRegister.class);
+    private static final Logger log = LoggerFactory.getLogger(DataSourceRegister.class);
 
     //默认数据源（主数据源）
     private DataSource defaultDataSource;
