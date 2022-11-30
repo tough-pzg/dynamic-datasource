@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  cn.com.sanga.standard.dynamic.datasource.config.DynamicDataSourceConfig
+  com.pzg.dynamic.datasource.config.BeanConfig
