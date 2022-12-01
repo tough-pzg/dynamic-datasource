@@ -6,15 +6,6 @@ dynamic-datasource 是一个动态数据源工具，支持配置多个数据源�
 
 > 2.可选择 DataSourceContextHolder.setDataSource() 手动设置使用的数据源 (这种方式不打印日志，但是需要手动清理数据源)
 
-# maven 三要素
-```
-  <dependency>
-     <groupId>com.pzg</groupId>
-     <artifactId>dynamic-datasource</artifactId>
-     <version>0.0.1-SNAPSHOT</version>
-  </dependency>
-
-```
 
 # Getting Started
 ## 1.配置默认数据源（必须）
