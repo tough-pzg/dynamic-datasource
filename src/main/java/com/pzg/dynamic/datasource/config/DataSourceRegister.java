@@ -1,5 +1,7 @@
 package com.pzg.dynamic.datasource.config;
 
+import com.pzg.dynamic.datasource.bean.HikariCpConfig;
+import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,6 +33,20 @@ public class DataSourceRegister implements EnvironmentAware {
     //自定义数据源
     private Map<Object, Object> customDataSources = new HashMap<>();
 
+    //HikariCpConfig 配置合并器
+    private static final ConfigMergeCreator<HikariCpConfig, HikariConfig> MERGE_CREATOR = new ConfigMergeCreator<>("HikariCp", HikariCpConfig.class, HikariConfig.class);
+
+    //默认的Hikari连接池全局配置
+    private static final HikariCpConfig GLOBAL_HIKARI_CP_CONFIG = new HikariCpConfig();
+
+    static {
+        GLOBAL_HIKARI_CP_CONFIG.setMaximumPoolSize(10);
+        GLOBAL_HIKARI_CP_CONFIG.setIdleTimeout(600000L);
+        GLOBAL_HIKARI_CP_CONFIG.setAutoCommit(true);
+        GLOBAL_HIKARI_CP_CONFIG.setMaxLifetime(1800000L);
+        GLOBAL_HIKARI_CP_CONFIG.setConnectionTimeout(30000L);
+    }
+
     /**
      * 凡注册到Spring容器内的bean，实现了EnvironmentAware接口重写setEnvironment方法后，在工程启动时可以获得application.properties的配置文件配置的属性值
      * @param environment 环境
@@ -56,13 +72,24 @@ public class DataSourceRegister implements EnvironmentAware {
     private void initDefaultDataSource(Environment env) {
         // 读取主数据源配置
         Map<String, Object> dataSourceMap = new HashMap<>();
-        //数据源类型，不填写则默认使用 Hikari
-        dataSourceMap.put("type", env.getProperty("spring.datasource.type"));
+        //目前版本限制使用 Hikari
+//        dataSourceMap.put("type", env.getProperty("spring.datasource.type"));
         dataSourceMap.put("driver-class-name", env.getProperty("spring.datasource.driver-class-name"));
         dataSourceMap.put("url", env.getProperty("spring.datasource.url"));
         dataSourceMap.put("username", env.getProperty("spring.datasource.username"));
         dataSourceMap.put("password", env.getProperty("spring.datasource.password"));
-        defaultDataSource = buildDataSource("default",dataSourceMap);
+
+        //hikari 连接池 配置信息
+        Iterable<ConfigurationPropertySource> sources = ConfigurationPropertySources.get(env);
+        Binder binder = new Binder(sources);
+        BindResult<HikariCpConfig> bindResult = binder.bind("spring.datasource.hikari", HikariCpConfig.class);
+        HikariCpConfig hikariCpConfig;
+        try {
+            hikariCpConfig = bindResult.get();
+        } catch (Exception e) {
+            hikariCpConfig = new HikariCpConfig();
+        }
+        defaultDataSource = buildDataSource("default",dataSourceMap,hikariCpConfig);
     }
 
     /**
@@ -84,7 +111,16 @@ public class DataSourceRegister implements EnvironmentAware {
                 dataSourceMap.put("url", properties.getProperty("url"));
                 dataSourceMap.put("username", properties.getProperty("username"));
                 dataSourceMap.put("password", properties.getProperty("password"));
-                customDataSources.put(dataSourceName,buildDataSource(dataSourceName,dataSourceMap));
+
+                //hikari 连接池 配置信息
+                BindResult<HikariCpConfig> hikariResult = binder.bind("spring.datasource." + dataSourceName + ".hikari", HikariCpConfig.class);
+                HikariCpConfig hikariCpConfig;
+                try {
+                    hikariCpConfig = hikariResult.get();
+                } catch (Exception e) {
+                    hikariCpConfig = new HikariCpConfig();
+                }
+                customDataSources.put(dataSourceName,buildDataSource(dataSourceName,dataSourceMap,hikariCpConfig));
             }
         }
     }
@@ -94,22 +130,25 @@ public class DataSourceRegister implements EnvironmentAware {
      * @param dsMap
      * @return
      */
-    private DataSource buildDataSource(String dataSourceName,Map<String, Object> dsMap) {
+    private DataSource buildDataSource(String dataSourceName,Map<String, Object> dsMap, HikariCpConfig hikariCpConfig) {
         try {
-            Class<? extends DataSource> typeClass;
-            Object type = dsMap.get("type");
-            if (ObjectUtils.isNotEmpty(type)) {
-                typeClass = (Class<? extends DataSource>) Class.forName((String) type);
-            }else {
-                //默认使用 HikariDataSource
-                typeClass = HikariDataSource.class;
-            }
-
             String driverClassName = dsMap.get("driver-class-name").toString();
             String url = dsMap.get("url").toString();
             String username = dsMap.get("username").toString();
             String password = dsMap.get("password").toString();
-            DataSource dataSource = DataSourceBuilder.create().type(typeClass).driverClassName(driverClassName).url(url).username(username).password(password).build();
+
+            //限制，只使用 Hikari 数据源连接池
+            HikariDataSource dataSource = new HikariDataSource();
+            //合并连接池配置
+            HikariConfig hikariConfig = MERGE_CREATOR.create(GLOBAL_HIKARI_CP_CONFIG, hikariCpConfig);
+            //设置数据源属性
+            hikariConfig.setDriverClassName(driverClassName);
+            hikariConfig.setJdbcUrl(url);
+            hikariConfig.setUsername(username);
+            hikariConfig.setPassword(password);
+
+            //连接池属性 复制到 数据源实例上
+            hikariConfig.copyStateTo(dataSource);
             log.info("创建[{}]数据源,url:{}",dataSourceName,url);
             return dataSource;
         } catch (Exception e) {
