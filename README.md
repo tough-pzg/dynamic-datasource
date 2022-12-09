@@ -8,7 +8,17 @@ dynamic-datasource 是一个动态数据源工具，支持配置多个数据源�
 
 
 # Getting Started
-## 1.配置默认数据源（必须）
+## 1.默认的连接池配置参数
+```
+//约定：数据源无连接池配置时，则会使用如下默认配置
+GLOBAL_HIKARI_CP_CONFIG.setMaximumPoolSize(10);
+GLOBAL_HIKARI_CP_CONFIG.setIdleTimeout(600000L);
+GLOBAL_HIKARI_CP_CONFIG.setAutoCommit(true);
+GLOBAL_HIKARI_CP_CONFIG.setMaxLifetime(1800000L);
+GLOBAL_HIKARI_CP_CONFIG.setConnectionTimeout(30000L);
+```
+
+## 2.配置默认数据源（必须）
 ```
 #使用springboot 约定的数据源前缀（spring.datasource）
 spring.datasource.driverClassName=org.postgresql.Driver
@@ -25,7 +35,7 @@ spring.datasource.hikari.max-lifetime=44
 spring.datasource.hikari.connection-timeout=44
 ```
 
-## 2.配置自定义的数据源（可选）
+## 3.配置自定义的数据源（可选）
 ```
 #数据源名称，多个以逗号分隔
 spring.datasource.names=first,second
@@ -51,15 +61,15 @@ spring.datasource.second.hikari.pool-name=financial-input-oa-HikariCP
 spring.datasource.second.hikari.max-lifetime=44
 spring.datasource.second.hikari.connection-timeout=44
 ```
-## 3.动态切换数据源
-### 3.1 添加测试数据
+## 4.动态切换数据源
+### 4.1 添加测试数据
 > localhost:5432/test 的 person表新增一条数据，person:{"age":1,"id":1,"name":"默认的数据源"}
 
 > localhost:5432/test1 的 person表新增一条数据，person:{"age":1,"id":1,"name":"数据源1"}
 
 > localhost:5432/test2 的 person表新增一条数据，person:{"age":1,"id":1,"name":"数据源2"}
 
-### 3.2 新建一个mapper接口
+### 4.2 新建一个mapper接口
 ```
 @Mapper
 public interface PersonMapper {
@@ -71,7 +81,7 @@ public interface PersonMapper {
 }
 
 ```
-### 3.3 新建一个Service类
+### 4.3 新建一个Service类
 ```
 @Service
 @DS(value = "first")
@@ -115,7 +125,7 @@ public class PersonService {
 }
 
 ```
-### 3.4 测试
+### 4.4 测试
 ```
     @Autowired
     private PersonService personService;
@@ -140,7 +150,7 @@ public class PersonService {
 
 ```
 
-### 3.5测试结果
+### 4.5测试结果
 ```
 控制台输出日志：
 
