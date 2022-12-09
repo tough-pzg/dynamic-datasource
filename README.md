@@ -15,6 +15,14 @@ spring.datasource.driverClassName=org.postgresql.Driver
 spring.datasource.url=jdbc:postgresql://localhost:5432/test
 spring.datasource.username=postgres
 spring.datasource.password=123456
+
+#默认数据源的连接池，以 spring.datasource.hikari 为前缀
+spring.datasource.hikari.maximum-pool-size=14
+spring.datasource.hikari.idle-timeout=44
+spring.datasource.hikari.auto-commit=true
+spring.datasource.hikari.pool-name=financial-input-HikariCP
+spring.datasource.hikari.max-lifetime=44
+spring.datasource.hikari.connection-timeout=44
 ```
 
 ## 2.配置自定义的数据源（可选）
@@ -34,6 +42,14 @@ spring.datasource.second.driverClassName=org.postgresql.Driver
 spring.datasource.second.url=jdbc:postgresql://localhost:5432/test2
 spring.datasource.second.username=postgres
 spring.datasource.second.password=123456
+
+#sencond 数据源的连接池，以 spring.datasource.second 为前缀
+spring.datasource.second.hikari.maximum-pool-size=44
+spring.datasource.second.hikari.idle-timeout=44
+spring.datasource.second.hikari.auto-commit=true
+spring.datasource.second.hikari.pool-name=financial-input-oa-HikariCP
+spring.datasource.second.hikari.max-lifetime=44
+spring.datasource.second.hikari.connection-timeout=44
 ```
 ## 3.动态切换数据源
 ### 3.1 添加测试数据
