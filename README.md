@@ -47,6 +47,8 @@ spring.datasource.first.url=jdbc:postgresql://localhost:5432/test1
 spring.datasource.first.username=postgres
 spring.datasource.first.password=123456
 
+#first数据源连接池无配置信息，则会使用默认的连接池配置参数
+
 # second 数据源配置，以spring.datasource.second为前缀
 spring.datasource.second.driverClassName=org.postgresql.Driver
 spring.datasource.second.url=jdbc:postgresql://localhost:5432/test2
